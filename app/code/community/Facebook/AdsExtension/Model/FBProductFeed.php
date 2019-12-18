@@ -187,7 +187,19 @@ class FBProductFeed {
 
   protected function buildProductEntry($product, $product_name) {
     $items = array();
-    $stock = ($this->stock) ? $this->stock : Mage::getModel('cataloginventory/stock_item')->loadByProduct($product);
+   // $stock = ($this->stock) ? $this->stock : Mage::getModel('cataloginventory/stock_item')->loadByProduct($product);
+	  //Load simple products to get actuall stock
+	$totalQty=0;
+	if($product->getTypeId() == "configurable"){
+    foreach ($product->getTypeInstance(true)->getUsedProducts(null, $product) as $simple) {
+        $sstock = (int)Mage::getModel('cataloginventory/stock_item')->loadByProduct($simple)->getQty();
+            $totalQty = $totalQty + $sstock;
+    }
+    }
+	  else{
+		   $totalQty = $totalQty+((int)Mage::getModel('cataloginventory/stock_item')->loadByProduct($product)->getQty());
+	  }
+	  
     $title = $product_name ? $product_name : $product->getName();
 
     $items[self::ATTR_ID] = $this->buildProductAttr(self::ATTR_ID, $product->getId());
@@ -221,6 +233,7 @@ class FBProductFeed {
       self::ATTR_LINK,
       $product_link);
 
+
     $items[self::ATTR_IMAGE_LINK] = $this->buildProductAttr(
       self::ATTR_IMAGE_LINK,
       $this->getImageURL($product));
@@ -238,8 +251,11 @@ class FBProductFeed {
     }
     $items[self::ATTR_CONDITION] = ($this->isValidCondition($condition)) ? $condition : $this->defaultCondition();
 
-    $items[self::ATTR_AVAILABILITY] = $this->buildProductAttr(self::ATTR_AVAILABILITY,
-      $stock->getIsInStock() ? 'in stock' : 'out of stock');
+    //$items[self::ATTR_AVAILABILITY] = $this->buildProductAttr(self::ATTR_AVAILABILITY,
+     // $stock->getIsInStock() ? 'in stock' : 'out of stock');
+	  
+	  $items[self::ATTR_AVAILABILITY] = $this->buildProductAttr(self::ATTR_AVAILABILITY,
+      $totalQty>0 ? 'in stock' : 'out of stock');
 
     $price = Mage::getModel('directory/currency')->formatPrecision(
       $this->getProductPrice($product),

@@ -24,13 +24,25 @@ class Facebook_AdsExtension_Block_Purchase
     $order->loadByIncrementId(
       Mage::getSingleton('checkout/session')->getLastRealOrderId()
     );
+	   $loadModel=Mage::getModel('catalog/product_type_configurable') ;
     $totalData = $order->getData();
     $allitems = $order->getAllVisibleItems();
 
     $this->orderData['value'] = $totalData['grand_total'];
     $this->orderData['content_ids'] = array();
     foreach ($allitems as $item) {
-      $this->orderData['content_ids'][] = $item->getData('product_id');
+     // $this->orderData['content_ids'][] = $item->getData('product_id');
+		
+		 if (Mage::getModel('catalog/product')->load($item->getData('product_id'))->getTypeId()== "simple") {
+      $parentIds = $loadModel ->getParentIdsByChild($item->getProductId());
+	      if (!empty($parentIds) && is_array($parentIds) && $parentIds[0]) {
+         $this->orderData['content_ids'][]  = $parentIds[0];
+      }
+	}
+		else{
+			 $this->orderData['content_ids'][] = $item->getProductId();
+		}
+		
     }
   }
 
