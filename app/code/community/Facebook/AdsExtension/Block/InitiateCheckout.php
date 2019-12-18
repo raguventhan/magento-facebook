@@ -18,11 +18,23 @@ class Facebook_AdsExtension_Block_InitiateCheckout
   extends Facebook_AdsExtension_Block_Common {
 
   public function getContentIDs() {
+	  $loadModel=Mage::getModel('catalog/product_type_configurable') ;
     $products = array();
-    $items =
-      Mage::getSingleton('checkout/session')->getQuote()->getAllVisibleItems();
+    $items =  Mage::getSingleton('checkout/session')->getQuote()->getAllVisibleItems();
     foreach ($items as $item) {
-      $products[] = $item->getProductId();
+      //$products[] = $item->getProductId();
+	 // If we added an invisible product, add the parent instead otherwise the add to cart pixel fire won't match.
+  //  $productType = Mage::getModel('catalog/product')->load($item->getProductId())->getTypeId();
+    if (Mage::getModel('catalog/product')->load($item->getProductId())->getTypeId()== "simple") {
+      $parentIds = $loadModel ->getParentIdsByChild($item->getProductId());
+	      if (!empty($parentIds) && is_array($parentIds) && $parentIds[0]) {
+        $products[]  = $parentIds[0];
+      }
+	}
+		else{
+			$products[] = $item->getProductId();
+		}
+		
     }
     return $this->arryToContentIdString($products);
   }
