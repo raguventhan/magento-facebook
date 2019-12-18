@@ -3,7 +3,7 @@ Facebooks ads plugin for magento version1.9
 
 This extension based on "Facebook_Ads_Extension-2.6.0-fb". Modified following files in core folder
 Purchase.php
-AddToCart.php
+InitiateCheckout.php
 FBProductFeed.php
 
 Updates:
